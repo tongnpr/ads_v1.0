@@ -1,11 +1,3 @@
-// app/page.tsx
-import { redirect } from "next/navigation"
-
-export default function Home() {
-  redirect("/dashboard")
-}
-
-// lib/utils.ts
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
