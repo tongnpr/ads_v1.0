@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserSession } from "@prisma/client"; // Import UserSession
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
+
+// Define a type for the user object we are processing
+type UserWithSession = {
+  id: number;
+  username: string;
+  sessions: UserSession[];
+};
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -17,7 +24,7 @@ export async function GET() {
     const recentActivities = await prisma.loginLog.findMany({
       take: 5,
       orderBy: {
-        loginTime: 'desc', // <-- จุดแก้ไขที่ 1: เปลี่ยนจาก createdAt เป็น loginTime
+        loginTime: 'desc',
       },
       include: {
         user: {
@@ -34,24 +41,22 @@ export async function GET() {
         username: true,
         sessions: {
           orderBy: {
-            // !!! สำคัญ: ตรวจสอบชื่อฟิลด์ใน schema.prisma ของคุณสำหรับตาราง UserSession
-            // อาจจะเป็น createdAt, updatedAt หรือชื่ออื่น
-            createdAt: 'desc', // <-- จุดแก้ไขที่ 2: หากมี Error ให้เปลี่ยนเป็นชื่อฟิลด์วันที่ที่ถูกต้อง
+            createdAt: 'desc',
           },
           take: 1,
         },
       },
     });
     
-    const userStatuses = usersWithStatus.map(user => {
+    // **THE FIX IS HERE**
+    // Add the type annotation ': UserWithSession' to the user parameter
+    const userStatuses = usersWithStatus.map((user: UserWithSession) => {
       const latestSession = user.sessions[0];
       let status = "Offline";
       let lastSeen = null;
 
       if (latestSession) {
-        // !!! สำคัญ: ตรวจสอบชื่อฟิลด์ใน schema.prisma ของคุณ
-        lastSeen = latestSession.createdAt; // <-- จุดแก้ไขที่ 3: หากมี Error ให้เปลี่ยนเป็นชื่อฟิลด์วันที่ที่ถูกต้อง
-        
+        lastSeen = latestSession.createdAt;
         const isOnline = latestSession.isActive && new Date(latestSession.expires) > new Date();
         if (isOnline) {
           status = "Online";
