@@ -1,14 +1,6 @@
-// app/page.tsx
-import { redirect } from "next/navigation"
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  redirect("/dashboard")
-}
-
-// lib/utils.ts
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+export default function HomePage() {
+  // เมื่อมีคนเข้ามาที่หน้าแรก ให้ส่งไปที่ /overview ทันที
+  redirect("/overview");
 }
